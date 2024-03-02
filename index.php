@@ -4,52 +4,30 @@ header("Content-Type: text/html; charset=utf-8");
 
 require 'simplehtmldom/simple_html_dom.php';
 
-// .card__body .card__title
-
-$foxtrot = file_get_html("https://www.foxtrot.com.ua/ru/shop/noutbuki.html");
+$films = file_get_html("https://kinoafisha.ua/ua/kinoafisha/");
 
 $links = [];
 $names = [];
 
-$card_titles = count($foxtrot->find('.card__body .card__title'));
+$card_titles = $films->find('.afisha-page > .content > .content__left-column > .movie__list > .movie__block > .movie__details > .movie__title');
 
-if (count($foxtrot->find('.card__body .card__title'))) {
-    foreach ($foxtrot->find('.card__body .card__title') as $a) {
+if (count($card_titles)) {
+    foreach ($card_titles as $a) {
         $links[] = $a->href;
-        $names[] = $a->innertext;
+        $names[] = $a->plaintext;
     }
 }
 
-// print_r($links);
+$data = array();
 
-// print_r($names);
-$ul = [];
-$ul[] = "<ul>";
-for ($i = 0; $i < count($names); $i++) {
-    $ul[] = "<li><strong>Назва: </strong><a href='https://www.foxtrot.com.ua{$links[$i]}'>{$names[$i]}</a></li>";
+for ($i = 0; $i < count($links); $i++) {
+    $film = array(
+        'name' => $names[$i],
+        'link' => "https://kinoafisha.ua/ua/kinoafisha/{$links[$i]}"
+    );
+    $data[] = $film;
 }
-$ul[] = "</ul>";
-$content = implode("\n", $ul);
 
-$path = "foxtrot";
-if (!is_dir($path)) {
-    mkdir($path);
-}
-$str_b = '<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foxtrot</title>
-</head>
-<body>';
+$json_data = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-$str_e = '</body>
-</html>';
-
-$h = fopen($path."/foxtrot.html", "w");
-
-fwrite($h, $str_b."\n");
-fwrite($h, $content."\n");
-fwrite($h, $str_e);
-fclose($h);
+file_put_contents('films.json', $json_data);
